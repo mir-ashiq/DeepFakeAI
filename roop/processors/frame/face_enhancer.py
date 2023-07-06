@@ -23,8 +23,22 @@ def get_face_enhancer() -> Any:
         if FACE_ENHANCER is None:
             model_path = resolve_relative_path('../models/GFPGANv1.4.pth')
             # todo: set models path https://github.com/TencentARC/GFPGAN/issues/399
-            FACE_ENHANCER = gfpgan.GFPGANer(model_path=model_path, upscale=1) # type: ignore[attr-defined]
+            FACE_ENHANCER = gfpgan.GFPGANer(model_path=model_path, upscale=1, device=get_device()) # type: ignore[attr-defined]
     return FACE_ENHANCER
+
+
+def get_device() -> str:
+    if 'CUDAExecutionProvider' in roop.globals.execution_providers:
+        return 'cuda'
+    if 'CoreMLExecutionProvider' in roop.globals.execution_providers:
+        return 'mps'
+    return 'cpu'
+
+
+def clear_face_enhancer() -> None:
+    global FACE_ENHANCER
+
+    FACE_ENHANCER = None
 
 
 def pre_check() -> bool:
@@ -41,9 +55,7 @@ def pre_start() -> bool:
 
 
 def post_process() -> None:
-    global FACE_ENHANCER
-
-    FACE_ENHANCER = None
+    clear_face_enhancer()
 
 
 def enhance_face(temp_frame: Frame) -> Frame:
